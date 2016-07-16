@@ -1,4 +1,4 @@
-name := """fs2-full-project"""
+name := """pricer-fs2-demo"""
 
 version := "1.0"
 

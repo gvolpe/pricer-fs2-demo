@@ -2,8 +2,14 @@ package com.gvolpe.fs2.streams
 
 object model {
 
-  case class Event(id: Long, `type`: String, origin: String, destination: String)
-  case class FlowMessage(headers: Map[String, Any], event: Event)
-  case class MessageHeader(key: String, value: Any)
+  type ItemId  = Long
+  type OrderId = Long
+
+  case class OrderStorage(read: StreamT[Order], write: SinkT[Order])
+
+  case class Item(id: ItemId, name: String, price: Double) {
+    override def toString = s"$name : $price"
+  }
+  case class Order(id: OrderId, items: List[Item])
 
 }
