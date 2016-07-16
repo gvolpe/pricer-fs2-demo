@@ -6,6 +6,8 @@ import fs2.Stream
 
 object PricerFlow {
 
+  implicit val S = fs2.Strategy.fromFixedDaemonPool(8, "pricer-flow")
+
   def flow(consumer: StreamT[Order],
            logger: SinkT[Order],
            storage: OrderStorage,

@@ -8,16 +8,21 @@ import fs2.{Task, pipe}
 
 object PricerComponents {
 
-  val storageWriter = pipe.lift[Task, Order, Unit](order => OrderDb.persist(order))
-  val storage = OrderStorage(OrderDb.orderQ.unsafeRun().dequeue, storageWriter)
+  // Another way of writing the storage writer
+  val customWriter: SinkT[Order] = { st => st flatMap { order =>
+    fs2.Stream.emit(OrderDb.persist(order).unsafeRun())
+  }}
 
-  val consumerWriter = pipe.lift[Task, Order, Unit](order => OrderKafkaBroker.produce(order))
-  val consumer: StreamT[Order] = OrderKafkaBroker.consume
+  val storageWriter               = pipe.lift[Task, Order, Unit](order => OrderDb.persist(order).unsafeRun())
+  val storage                     = OrderStorage(OrderDb.orderQ.dequeue, storageWriter)
+
+  val consumerWriter              = pipe.lift[Task, Order, Unit](order => OrderKafkaBroker.produce(order).unsafeRun())
+  val consumer: StreamT[Order]    = OrderKafkaBroker.consume
 
   val pricer: PipeT[Order, Order] = pipe.lift[Task, Order, Order](order => PricerService.updatePrices(order))
 
-  val publisher: SinkT[Order] = pipe.lift[Task, Order, Unit](order => OrderRabbitMqBroker.produce(order))
+  val publisher: SinkT[Order]     = pipe.lift[Task, Order, Unit](order => OrderRabbitMqBroker.produce(order).unsafeRun())
 
-  val logger: SinkT[Order]  = pipe.lift[Task, Order, Unit](order => showOrder("Consuming", order))
+  val logger: SinkT[Order]        = pipe.lift[Task, Order, Unit](order => showOrder("Consuming", order).unsafeRun())
 
 }

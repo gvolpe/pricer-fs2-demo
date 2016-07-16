@@ -7,15 +7,12 @@ object PricerDemo extends App {
 
   import PricerComponents._
 
-  implicit val S = fs2.Strategy.fromFixedDaemonPool(8, threadName = "pricer-demo")
-
-  val pricerFlow = PricerFlow.flow(consumer, logger, storage, pricer, publisher)(S)
-  val generator  = OrderGeneratorFlow.flow(consumerWriter)
+  implicit val S = fs2.Strategy.fromFixedDaemonPool(2, "pricer-demo")
 
   val program = fs2.concurrent.join(10)(
     Stream(
-      pricerFlow,
-      generator
+      PricerFlow.flow(consumer, logger, storage, pricer, publisher),
+      OrderGeneratorFlow.flow(consumerWriter)
     )
   )
 
