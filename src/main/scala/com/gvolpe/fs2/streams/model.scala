@@ -12,4 +12,8 @@ object model {
   }
   case class Order(id: OrderId, items: List[Item])
 
+  object Order {
+    val Empty = Order(0L, List.empty[Item])
+  }
+
 }
