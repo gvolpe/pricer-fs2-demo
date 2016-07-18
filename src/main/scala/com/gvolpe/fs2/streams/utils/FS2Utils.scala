@@ -7,6 +7,6 @@ object FS2Utils {
 
   def liftSink[A](f: A => Task[Unit]): SinkT[A] = liftPipe[A, Unit](f)
 
-  def liftPipe[A, B](f: A => Task[B]): PipeT[A, B] = _.evalMap (value => f(value))
+  def liftPipe[A, B](f: A => Task[B]): PipeT[A, B] = _.evalMap (f(_))
 
 }
