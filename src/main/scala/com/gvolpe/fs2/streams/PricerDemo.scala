@@ -10,7 +10,8 @@ import fs2.{Stream, Task, async}
 
 object PricerDemo extends App {
 
-  implicit val S = fs2.Strategy.fromFixedDaemonPool(2, "pricer-demo")
+  implicit val R = fs2.Scheduler.fromFixedDaemonPool(2, "generator-scheduler")
+  implicit val S = fs2.Strategy.fromFixedDaemonPool(8, "pricer-demo")
 
   val pricer: PipeT[Order, Order]   = liftPipe[Order, Order](PricerService.updatePrices)
 
@@ -23,8 +24,8 @@ object PricerDemo extends App {
     kafkaBroker   = new OrderKafkaBroker(kafkaTopic)
     rabbitBroker  = new OrderRabbitMqBroker(rabbitQueue)
     db            = new OrderDb(dbQueue)
-    pricerFlow    = PricerFlow.flow(kafkaBroker.consume, logger, OrderStorage(db.read, db.persist), pricer, rabbitBroker.produce)
-    orderGenFlow  = OrderGeneratorFlow.flow(kafkaBroker.produce)
+    pricerFlow    = new PricerFlow().flow(kafkaBroker.consume, logger, OrderStorage(db.read, db.persist), pricer, rabbitBroker.produce)
+    orderGenFlow  = new OrderGeneratorFlow().flow(kafkaBroker.produce)
     program       <- pricerFlow mergeHaltBoth orderGenFlow
   } yield program
 

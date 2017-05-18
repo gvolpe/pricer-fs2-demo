@@ -2,17 +2,15 @@ package com.gvolpe.fs2.streams.flow
 
 import com.gvolpe.fs2.streams._
 import com.gvolpe.fs2.streams.model._
-import fs2.Stream
+import fs2.{Strategy, Stream, Task}
 
-object PricerFlow {
-
-  implicit val S = fs2.Strategy.fromFixedDaemonPool(8, "pricer-flow")
+class PricerFlow()(implicit S: Strategy) {
 
   def flow(consumer: StreamT[Order],
            logger: SinkT[Order],
            storage: OrderStorage,
            pricer: PipeT[Order, Order],
-           publisher: SinkT[Order])(implicit S: fs2.Strategy) = {
+           publisher: SinkT[Order])(implicit S: fs2.Strategy): Stream[Task, Unit] = {
     fs2.concurrent.join(2)(
       Stream(
         consumer      observe logger to storage.write,

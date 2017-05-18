@@ -7,15 +7,12 @@ import fs2._
 import scala.concurrent.duration._
 import scala.util.Random
 
-object OrderGeneratorFlow {
+class OrderGeneratorFlow()(implicit S: Strategy, R: Scheduler) {
 
-  implicit val scheduler = fs2.Scheduler.fromFixedDaemonPool(2, "generator-scheduler")
-  implicit val S         = fs2.Strategy.fromFixedDaemonPool(2, "generator-timer")
-
-  private val defaultOrderGen: PipeT[Int, Order] = { orderIds =>
-    val tickInterrupter = time.sleep[Task](11.seconds) ++ Stream(true)
+  private def defaultOrderGen: PipeT[Int, Order] = { orderIds =>
+    val tickInterrupter = time.sleep[Task](11.seconds).map(_ => false) ++ Stream(true)
     val orderTick       = time.awakeEvery[Task](2.seconds).interruptWhen(tickInterrupter)
-    (orderIds zip orderTick) flatMap { case (id, t) =>
+    (orderIds zip orderTick) flatMap { case (id, _) =>
       val itemId    = Random.nextInt(500).toLong
       val itemPrice = Random.nextInt(10000).toDouble
       val newOrder  = Order(id.toLong, List(Item(itemId, s"laptop-$id", itemPrice)))
@@ -23,7 +20,7 @@ object OrderGeneratorFlow {
     }
   }
 
-  def flow(source: SinkT[Order], orderGen: PipeT[Int, Order] = defaultOrderGen) = {
+  def flow(source: SinkT[Order], orderGen: PipeT[Int, Order] = defaultOrderGen): Stream[Task, Unit] = {
     Stream.range(1, 10) through orderGen to source
   }
 

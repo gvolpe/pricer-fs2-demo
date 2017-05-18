@@ -11,7 +11,7 @@ package object streams {
 
   def log(action: String): PipeT[Order, Order] = _.evalMap (order => showOrder(action, order) map (_ => order))
 
-  def showOrder(action: String, order: Order) = Task.now {
+  def showOrder(action: String, order: Order): Task[Unit] = Task.now {
     println(s"$action order ${order.id} with items ${order.items.map(_.toString).mkString(" | ")}")
   }
 

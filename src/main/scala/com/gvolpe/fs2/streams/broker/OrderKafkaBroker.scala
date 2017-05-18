@@ -6,10 +6,6 @@ import fs2.async.mutable.Topic
 import fs2.Task
 
 class OrderKafkaBroker(topic: Topic[Task, Order]) extends Broker {
-
-  implicit val S     = fs2.Strategy.fromFixedDaemonPool(8, "kafka-broker")
-
   override def consume: StreamT[Order] = topic.subscribe(100)
-
   override def produce: SinkT[Order]   = _ to topic.publish
 }
