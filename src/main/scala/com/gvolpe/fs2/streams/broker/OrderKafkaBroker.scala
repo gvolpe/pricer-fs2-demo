@@ -1,11 +1,11 @@
 package com.gvolpe.fs2.streams.broker
 
-import com.gvolpe.fs2.streams._
+import cats.effect.IO
 import com.gvolpe.fs2.streams.model.Order
 import fs2.async.mutable.Topic
-import fs2.Task
+import fs2.{Sink, Stream}
 
-class OrderKafkaBroker(topic: Topic[Task, Order]) extends Broker {
-  override def consume: StreamT[Order] = topic.subscribe(100)
-  override def produce: SinkT[Order]   = _ to topic.publish
+class OrderKafkaBroker(topic: Topic[IO, Order]) extends Broker {
+  override def consume: Stream[IO, Order] = topic.subscribe(100)
+  override def produce: Sink[IO, Order]   = _ to topic.publish
 }

@@ -1,22 +1,23 @@
 package com.gvolpe.fs2.streams.flow
 
-import com.gvolpe.fs2.streams._
+import cats.effect.IO
 import com.gvolpe.fs2.streams.model._
-import fs2.{Strategy, Stream, Task}
+import fs2.{Pipe, Sink, Stream}
 
-class PricerFlow()(implicit S: Strategy) {
+import scala.concurrent.ExecutionContext
 
-  def flow(consumer: StreamT[Order],
-           logger: SinkT[Order],
+class PricerFlow() {
+
+  def flow(consumer: Stream[IO, Order],
+           logger: Sink[IO, Order],
            storage: OrderStorage,
-           pricer: PipeT[Order, Order],
-           publisher: SinkT[Order])(implicit S: fs2.Strategy): Stream[Task, Unit] = {
-    fs2.concurrent.join(2)(
-      Stream(
-        consumer      observe logger to storage.write,
-        storage.read  through pricer to publisher
-      )
-    )
+           pricer: Pipe[IO, Order, Order],
+           publisher: Sink[IO, Order])
+          (implicit ec: ExecutionContext): Stream[IO, Unit] = {
+    Stream(
+      consumer      observe logger to storage.write,
+      storage.read  through pricer to publisher
+    ).join(2)
   }
 
 }

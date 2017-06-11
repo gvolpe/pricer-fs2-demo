@@ -1,17 +1,14 @@
 package com.gvolpe.fs2
 
+import cats.effect.IO
 import com.gvolpe.fs2.streams.model.Order
-import fs2.{Pipe, Sink, Stream, Task}
+import fs2.Pipe
 
 package object streams {
 
-  type StreamT[A]   = Stream[Task, A]
-  type PipeT[A, B]  = Pipe[Task, A, B]
-  type SinkT[A]     = Sink[Task, A]
+  def log(action: String): Pipe[IO, Order, Order] = _.evalMap (order => showOrder(action, order) map (_ => order))
 
-  def log(action: String): PipeT[Order, Order] = _.evalMap (order => showOrder(action, order) map (_ => order))
-
-  def showOrder(action: String, order: Order): Task[Unit] = Task.now {
+  def showOrder(action: String, order: Order): IO[Unit] = IO {
     println(s"$action order ${order.id} with items ${order.items.map(_.toString).mkString(" | ")}")
   }
 

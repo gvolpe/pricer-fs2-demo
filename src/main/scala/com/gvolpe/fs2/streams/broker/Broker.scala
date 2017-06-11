@@ -1,9 +1,10 @@
 package com.gvolpe.fs2.streams.broker
 
-import com.gvolpe.fs2.streams.{SinkT, StreamT}
+import cats.effect.IO
 import com.gvolpe.fs2.streams.model.Order
+import fs2.{Sink, Stream}
 
 trait Broker {
-  def consume: StreamT[Order]
-  def produce: SinkT[Order]
+  def consume: Stream[IO, Order]
+  def produce: Sink[IO, Order]
 }
