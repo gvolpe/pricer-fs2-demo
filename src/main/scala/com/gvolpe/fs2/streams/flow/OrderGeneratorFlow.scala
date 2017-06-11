@@ -11,7 +11,7 @@ import scala.util.Random
 class OrderGeneratorFlow()(implicit ec: ExecutionContext, R: Scheduler) {
 
   private def defaultOrderGen: Pipe[IO, Int, Order] = { orderIds =>
-    val tickInterrupter = time.sleep[IO](11.seconds).map(_ => false) ++ Stream(true)
+    val tickInterrupter = time.sleep[IO](11.seconds).map(_ => true) ++ Stream(true)
     val orderTick       = time.awakeEvery[IO](2.seconds).interruptWhen(tickInterrupter)
     (orderIds zip orderTick) flatMap { case (id, _) =>
       val itemId    = Random.nextInt(500).toLong
